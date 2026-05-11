@@ -14,7 +14,7 @@
         @media print {
             .no-print { display: none !important; }
             body { background: white !important; }
-            .print-card { border: 1px solid #e2e8f0 !important; break-inside: avoid; }
+            .print-card { border: 1px solid #e2e8f0 !important; break-inside: avoid; shadow: none !important; }
         }
     </style>
 </head>
@@ -24,83 +24,98 @@
         ✅ Analysis Complete!
     </div>
 
-    <nav class="glass-nav px-6 py-4 sticky top-0 z-50 no-print">
+    <nav class="glass-nav px-6 py-4 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3 cursor-pointer" onclick="location.reload()">
-                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-                    <span>S</span>
+                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 font-bold text-xl">
+                    S
                 </div>
                 <div>
-                    <h1 class="text-xl font-extrabold text-slate-900">Syllabus.AI</h1>
+                    <h1 class="text-xl font-extrabold tracking-tight text-slate-900 uppercase">Syllabus.AI</h1>
                     <p class="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">NEP 2020 Compliance</p>
                 </div>
             </div>
-            <button onclick="location.reload()" class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 shadow-sm">Reset Auditor</button>
+            
+            <div class="flex items-center gap-4 no-print">
+                <span class="hidden md:block text-xs font-bold text-slate-400 border px-2 py-1 rounded-md">V2.0 PRO</span>
+                <button onclick="location.reload()" class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition shadow-sm">
+                    Reset Auditor
+                </button>
+            </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto p-6">
+    <main class="max-w-7xl mx-auto p-6 lg:p-10">
         
-        <div id="upload-section" class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10 no-print">
-            <div class="bg-white border-2 border-dashed border-slate-200 rounded-[2rem] p-12 text-center hover:border-indigo-400 transition-all cursor-pointer group flex flex-col items-center justify-center" onclick="document.getElementById('fileInput').click()">
+        <div id="welcome-text" class="text-center mb-12 mt-8 no-print">
+            <h2 class="text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">Audit your curriculum in seconds.</h2>
+            <p class="text-slate-500 max-w-2xl mx-auto">Upload your syllabus PDF or paste the content. Our AI maps your modules to SDG, IKS, and Startup goals using NEP 2020 frameworks.</p>
+        </div>
+
+        <div id="upload-section" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch no-print">
+            <div class="bg-white border-2 border-dashed border-slate-200 rounded-[2.5rem] p-12 text-center hover:border-indigo-400 transition-all cursor-pointer shadow-sm group flex flex-col justify-center items-center" 
+                 onclick="document.getElementById('fileInput').click()">
                 <input type="file" id="fileInput" class="hidden" accept=".pdf">
-                <div class="text-5xl mb-4">📂</div>
-                <h3 class="text-2xl font-bold">Upload PDF</h3>
-                <p class="text-slate-500 mt-2 italic">Best for full mapping</p>
+                <div class="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-4xl">📂</div>
+                <h3 class="text-2xl font-bold text-slate-800">Upload Syllabus PDF</h3>
+                <div class="mt-6 px-6 py-2 bg-slate-900 text-white rounded-full text-sm font-bold">Select File</div>
             </div>
 
-            <div class="bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm flex flex-col">
-                <h3 class="text-xl font-bold mb-4 italic">✍️ Paste Content</h3>
-                <textarea id="textInput" class="flex-grow p-5 bg-slate-50 rounded-2xl border border-slate-100 text-sm outline-none min-h-[200px]" placeholder="Paste syllabus text here..."></textarea>
-                <button onclick="analyzeFromText()" class="mt-4 bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 shadow-lg active:scale-95 transition">Analyze Text</button>
+            <div class="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm flex flex-col">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-xl">✍️</span>
+                    <h3 class="text-xl font-bold text-slate-800 tracking-tight">Paste Content</h3>
+                </div>
+                <textarea id="textInput" class="flex-grow p-5 bg-slate-50 rounded-2xl border border-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 outline-none min-h-[200px]" 
+                          placeholder="Paste syllabus modules here..."></textarea>
+                <button onclick="analyzeFromText()" class="mt-4 bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-100 active:scale-95">
+                    Start AI Analysis
+                </button>
             </div>
         </div>
 
         <div id="loading-state" class="hidden py-32 text-center no-print">
             <div class="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-            <h3 class="text-2xl font-bold">Consulting AI...</h3>
-            <p class="text-slate-500 mt-2">Reading curriculum modules and mapping goals</p>
+            <h3 class="text-2xl font-bold text-slate-900">Consulting AI Auditor...</h3>
+            <p class="text-slate-500 mt-2 italic">Scanning modules and mapping evidence</p>
         </div>
 
-        <div id="results-section" class="hidden space-y-8 mt-6">
-            
-            <div id="stats-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                </div>
+        <div id="results-section" class="hidden space-y-10">
+            <div id="stats-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
 
             <div class="bg-indigo-600 text-white p-8 rounded-[2.5rem] shadow-xl flex flex-col md:flex-row gap-6 items-center print-card">
-                <div class="text-4xl">💡</div>
+                <div class="text-4xl bg-white/20 p-4 rounded-2xl">💡</div>
                 <div>
-                    <h4 class="text-xs font-black uppercase text-indigo-200 mb-1">Consultant Recommendation</h4>
+                    <h4 class="text-xs font-black uppercase tracking-widest text-indigo-200 mb-1">AI Recommendation</h4>
                     <p id="aiSuggestion" class="text-lg font-medium"></p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div id="evidenceList" class="space-y-4"></div>
-                
-                <div id="pdfView" class="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm h-[600px] flex flex-col no-print">
-                    <iframe id="pdfFrame" class="w-full h-full rounded-2xl bg-slate-50 border-0"></iframe>
-                    <div class="mt-4 flex justify-between px-2">
-                        <span class="text-xs text-slate-400 italic">Visual Highlighting Active</span>
-                        <a id="downloadBtn" href="#" class="text-indigo-600 font-bold text-sm">Download Audited PDF →</a>
+                <div id="pdfView" class="bg-white p-4 rounded-[2.5rem] border border-slate-100 shadow-sm h-[650px] flex flex-col no-print">
+                    <iframe id="pdfFrame" class="w-full h-full rounded-2xl border-0 bg-slate-50"></iframe>
+                    <div class="mt-4 flex justify-between items-center px-4">
+                        <p class="text-xs text-slate-400 font-medium italic underline underline-offset-4">Visual Evidence Highlighting Active</p>
+                        <a id="downloadBtn" href="#" target="_blank" class="text-indigo-600 font-bold text-sm hover:underline">Download PDF Report →</a>
                     </div>
                 </div>
             </div>
 
             <div class="flex justify-center py-10 no-print">
-                <button onclick="window.print()" class="bg-slate-900 text-white px-12 py-5 rounded-2xl font-extrabold shadow-2xl hover:scale-105 transition">
-                    🖨️ Print Full Audit Report
+                <button onclick="window.print()" class="bg-slate-900 text-white px-12 py-5 rounded-2xl font-extrabold shadow-2xl hover:scale-105 transition active:scale-95 flex items-center gap-3">
+                    <span>🖨️</span> Print Full Audit Report
                 </button>
             </div>
         </div>
     </main>
 
     <footer class="text-center py-10 text-slate-400 text-xs font-medium no-print">
-        Developed by Fizza Fatima | © 2026 Syllabus.AI
+        Developed by Fizza Fatima | © 2026 Syllabus.AI | National Education Policy Framework
     </footer>
 
     <script>
-        // 1. INPUT HANDLERS
+        // INPUT HANDLERS
         document.getElementById('fileInput').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -112,15 +127,16 @@
 
         function analyzeFromText() {
             const text = document.getElementById('textInput').value;
-            if (!text.trim()) return alert("Please enter text content.");
+            if (!text.trim()) return alert("Please enter syllabus text.");
             const formData = new FormData();
             formData.append('text_input', text);
             startAnalysis(formData);
         }
 
-        // 2. API CALL
+        // ANALYSIS & TOAST LOGIC
         async function startAnalysis(formData) {
             document.getElementById('upload-section').classList.add('hidden');
+            document.getElementById('welcome-text').classList.add('hidden');
             document.getElementById('loading-state').classList.remove('hidden');
 
             try {
@@ -130,17 +146,19 @@
 
                 document.getElementById('loading-state').classList.add('hidden');
                 
-                // Show Success Toast
+                // Show Results immediately so charts render
+                displayResults(data);
+
+                // Handle Toast Popup
                 const toast = document.getElementById('toast');
                 toast.classList.remove('opacity-0', 'translate-y-[-20px]');
                 toast.classList.add('opacity-100', 'translate-y-0');
 
-                // Trigger Results
-                displayResults(data);
-
+                // AUTO-HIDE TOAST after 3 seconds
                 setTimeout(() => {
                     toast.classList.add('opacity-0', 'translate-y-[-20px]');
-                }, 2000);
+                    toast.classList.remove('opacity-100', 'translate-y-0');
+                }, 3000);
 
             } catch (err) {
                 alert("Error: " + err.message);
@@ -148,13 +166,11 @@
             }
         }
 
-        // 3. RENDER RESULTS
         function displayResults(data) {
-            const section = document.getElementById('results-section');
-            section.classList.remove('hidden');
+            document.getElementById('results-section').classList.remove('hidden');
             document.getElementById('aiSuggestion').innerText = data.suggestion;
 
-            // Render Charts
+            // Render Donut Charts
             const statsGrid = document.getElementById('stats-grid');
             statsGrid.innerHTML = '';
             
@@ -162,10 +178,10 @@
                 const canvasId = `chart-${i}`;
                 statsGrid.innerHTML += `
                     <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-50 flex flex-col items-center print-card">
-                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-4">${res.theme} Compliance</h4>
+                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">${res.theme} Compliance</h4>
                         <div class="w-32 h-32 mb-4"><canvas id="${canvasId}"></canvas></div>
                         <span class="text-3xl font-black">${res.score}</span>
-                        <p class="text-[10px] font-bold text-slate-400 mt-2">${res.goal}</p>
+                        <p class="text-xs font-bold text-slate-400 mt-2">${res.goal}</p>
                     </div>`;
 
                 setTimeout(() => {
@@ -178,12 +194,12 @@
                                 data: [parseInt(res.score), 100 - parseInt(res.score)],
                                 backgroundColor: [colorMap[res.theme.toUpperCase()] || '#6366f1', '#f8fafc'],
                                 borderWidth: 0,
-                                borderRadius: 20
+                                borderRadius: 15
                             }]
                         },
                         options: { cutout: '85%', plugins: { tooltip: { enabled: false } } }
                     });
-                }, 50);
+                }, 100);
             });
 
             // Evidence List
@@ -193,13 +209,13 @@
                 const colorMap = { 'SDG': 'yellow-400', 'IKS': 'purple-500', 'STARTUP': 'red-500' };
                 const border = colorMap[res.theme.toUpperCase()] || 'indigo-500';
                 list.innerHTML += `
-                    <div class="bg-white p-6 rounded-3xl border-l-8 border-${border} shadow-sm print-card">
+                    <div class="bg-white p-6 rounded-[2rem] border-l-8 border-${border} shadow-sm print-card mb-4">
                         <div class="flex justify-between items-center mb-2">
-                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${res.theme}</span>
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${res.theme} Flag</span>
                             <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">${res.score}</span>
                         </div>
                         <h4 class="font-bold text-slate-900">${res.goal}</h4>
-                        <p class="mt-3 text-sm text-slate-500 bg-slate-50 p-4 rounded-2xl italic">"${res.evidence}"</p>
+                        <p class="mt-3 text-sm text-slate-500 bg-slate-50 p-4 rounded-2xl italic leading-relaxed">"${res.evidence}"</p>
                     </div>`;
             });
 
