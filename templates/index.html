@@ -1,202 +1,97 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Syllabus.AI | National Education Auditor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-        }
-        .hero-gradient {
-            background: radial-gradient(circle at top right, #eef2ff, #ffffff);
-        }
-    </style>
-</head>
-<body class="bg-slate-50 text-slate-900 min-h-screen hero-gradient">
-
-    <nav class="glass-nav px-6 py-4 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="location.reload()">
-                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-xl font-extrabold tracking-tight text-slate-900">Syllabus.AI</h1>
-                    <p class="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">NEP 2020 Compliance</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-4">
-                <span class="hidden md:block text-sm font-medium text-slate-500">v2.0 Beta</span>
-                <button onclick="location.reload()" class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition shadow-sm">
-                    Reset Auditor
-                </button>
-            </div>
-        </div>
-    </nav>
-
-    <main class="max-w-7xl mx-auto p-6 lg:p-10">
-        
-        <div id="welcome-text" class="text-center mb-12">
-            <h2 class="text-4xl font-extrabold text-slate-900 mb-4">Audit your curriculum in seconds.</h2>
-            <p class="text-slate-500 max-w-2xl mx-auto">Upload your syllabus PDF or paste the course description below. Our AI will analyze alignment with SDG, IKS, and Startup goals.</p>
-        </div>
-
-        <div id="upload-section" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-            <div class="bg-white border-2 border-dashed border-slate-200 rounded-[2rem] p-12 text-center hover:border-indigo-400 transition-all cursor-pointer shadow-sm group flex flex-col justify-center items-center" 
-                 onclick="document.getElementById('fileInput').click()">
-                <input type="file" id="fileInput" class="hidden" accept=".pdf">
-                <div class="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <span class="text-4xl">📂</span>
-                </div>
-                <h3 class="text-2xl font-bold text-slate-800">Upload Syllabus PDF</h3>
-                <p class="text-slate-500 mt-2">Maximum file size: 10MB</p>
-                <div class="mt-6 px-6 py-2 bg-slate-900 text-white rounded-full text-sm font-bold">Select File</div>
-            </div>
-
-            <div class="bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm flex flex-col">
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="text-xl">✍️</span>
-                    <h3 class="text-xl font-bold text-slate-800">Paste Text Content</h3>
-                </div>
-                <textarea id="textInput" class="flex-grow p-5 bg-slate-50 rounded-2xl border border-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 outline-none min-h-[200px]" 
-                          placeholder="Paste learning objectives, course content, or module descriptions here..."></textarea>
-                <button onclick="analyzeFromText()" class="mt-4 bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-100 active:scale-95">
-                    Start AI Analysis
-                </button>
-            </div>
-        </div>
-
-        <div id="loading-state" class="hidden py-24 text-center">
-            <div class="relative w-20 h-20 mx-auto mb-6">
-                <div class="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
-                <div class="absolute inset-0 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
-            </div>
-            <h3 class="text-2xl font-bold text-slate-900">Auditing Syllabus...</h3>
-            <p class="text-slate-500 mt-2 italic">Matching content with NEP 2020 guidelines</p>
-        </div>
-
-        <div id="results-section" class="hidden space-y-10">
-            <div id="stats-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                </div>
-
-            <div class="bg-indigo-600 text-white p-8 rounded-[2rem] shadow-xl flex flex-col md:flex-row gap-6 items-center">
-                <div class="text-4xl bg-white/20 p-4 rounded-2xl">💡</div>
-                <div>
-                    <h4 class="text-xs font-black uppercase tracking-widest text-indigo-200 mb-1">AI Recommendation</h4>
-                    <p id="aiSuggestion" class="text-lg font-medium"></p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div id="evidenceList" class="space-y-4">
-                    </div>
-                <div id="pdfView" class="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm h-[600px] flex flex-col">
-                    <iframe id="pdfFrame" class="w-full h-full rounded-2xl border-0 bg-slate-50"></iframe>
-                    <div class="mt-4 flex justify-between items-center px-2">
-                        <p class="text-xs text-slate-400 font-medium italic">Highlighter shows exact evidence locations</p>
-                        <a id="downloadBtn" href="#" target="_blank" class="text-indigo-600 font-bold text-sm hover:underline">Download Report →</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex justify-center py-10">
-             <button onclick="window.print()" class="bg-indigo-600 text-white px-12 py-5 rounded-2xl font-extrabold shadow-2xl hover:bg-indigo-700 transition flex items-center gap-3">
-               <span>🖨️</span> Print Full Audit Report
-             </button>
+<div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[60] bg-green-600 text-white px-8 py-3 rounded-2xl font-bold shadow-2xl transform transition-all duration-500 opacity-0 translate-y-[-20px] pointer-events-none">
+    ✅ Analysis Complete!
 </div>
-        </div>
-    </main>
 
-    <script>
-        let charts = {};
+<script>
+    let charts = {};
 
-        // 1. File Upload Logic
-        document.getElementById('fileInput').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const formData = new FormData();
-            formData.append('file', file);
-            startAnalysis(formData);
-            e.target.value = ''; // Reset input
+    async function startAnalysis(formData) {
+        document.getElementById('upload-section').classList.add('hidden');
+        document.getElementById('welcome-text').classList.add('hidden');
+        document.getElementById('loading-state').classList.remove('hidden');
+
+        try {
+            const response = await fetch('/analyze', { method: 'POST', body: formData });
+            const data = await response.json();
+            
+            if (data.error) throw new Error(data.error);
+
+            // THE POP-UP LOGIC
+            document.getElementById('loading-state').classList.add('hidden');
+            const toast = document.getElementById('toast');
+            toast.classList.remove('opacity-0', 'translate-y-[-20px]');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            // Wait 1.5 seconds for the user to see the success message
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-20px]');
+                displayResults(data);
+            }, 1500);
+
+        } catch (err) {
+            alert("Error: " + err.message);
+            location.reload();
+        }
+    }
+
+    function displayResults(data) {
+        document.getElementById('results-section').classList.remove('hidden');
+        document.getElementById('aiSuggestion').innerText = data.suggestion;
+
+        // RENDER THE DONUT CHARTS
+        const statsGrid = document.getElementById('stats-grid');
+        statsGrid.innerHTML = ''; // Clear existing
+
+        data.audit.forEach((res, index) => {
+            const canvasId = `chart-${index}`;
+            statsGrid.innerHTML += `
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center">
+                    <h4 class="text-xs font-black text-slate-400 uppercase mb-4">${res.theme} Score</h4>
+                    <div class="w-32 h-32 mb-4">
+                        <canvas id="${canvasId}"></canvas>
+                    </div>
+                    <span class="text-2xl font-black">${res.score}</span>
+                </div>
+            `;
+
+            // Wait for DOM update then draw chart
+            setTimeout(() => {
+                const ctx = document.getElementById(canvasId).getContext('2d');
+                const scoreValue = parseInt(res.score);
+                const colorMap = { 'SDG': '#eab308', 'IKS': '#a855f7', 'STARTUP': '#ef4444' };
+                
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        datasets: [{
+                            data: [scoreValue, 100 - scoreValue],
+                            backgroundColor: [colorMap[res.theme.toUpperCase()] || '#6366f1', '#f1f5f9'],
+                            borderWidth: 0,
+                            borderRadius: 10
+                        }]
+                    },
+                    options: { cutout: '80%', plugins: { tooltip: { enabled: false } } }
+                });
+            }, 0);
         });
 
-        // 2. Text Input Logic
-        function analyzeFromText() {
-            const text = document.getElementById('textInput').value;
-            if (!text.trim()) return alert("Please paste syllabus text first!");
-            const formData = new FormData();
-            formData.append('text_input', text);
-            startAnalysis(formData);
+        // (Keep your existing PDF display and evidence list logic below this)
+        if (data.pdf_url) {
+            document.getElementById('pdfFrame').src = data.pdf_url;
+            document.getElementById('downloadBtn').href = data.pdf_url;
         }
-
-        // 3. Common Analysis Launcher
-        async function startAnalysis(formData) {
-            document.getElementById('upload-section').classList.add('hidden');
-            document.getElementById('welcome-text').classList.add('hidden');
-            document.getElementById('loading-state').classList.remove('hidden');
-
-            try {
-                const response = await fetch('/analyze', { method: 'POST', body: formData });
-                const data = await response.json();
-                if (data.error) throw new Error(data.error);
-                displayResults(data);
-            } catch (err) {
-                alert("Error: " + err.message);
-                location.reload();
-            }
-        }
-
-        // 4. Display Logic
-        function displayResults(data) {
-            document.getElementById('loading-state').classList.add('hidden');
-            document.getElementById('results-section').classList.remove('hidden');
-
-            // Handle PDF Display
-            if (data.pdf_url) {
-                document.getElementById('pdfFrame').src = data.pdf_url;
-                document.getElementById('downloadBtn').href = data.pdf_url;
-            } else {
-                document.getElementById('pdfView').innerHTML = `
-                    <div class="h-full flex flex-col items-center justify-center text-slate-400">
-                        <span class="text-5xl mb-4">📝</span>
-                        <p class="font-bold">Text-only analysis complete.</p>
-                        <p class="text-sm">Upload a PDF for visual highlighting.</p>
-                    </div>`;
-            }
-
-            document.getElementById('aiSuggestion').innerText = data.suggestion;
-
-            // Render Evidence List
-            const list = document.getElementById('evidenceList');
-            list.innerHTML = `<h3 class="text-xl font-bold text-slate-800 mb-4 px-2 text-center lg:text-left">Audit Evidence</h3>`;
-            
-            data.audit.forEach(res => {
-                const colorMap = { 'SDG': 'yellow-400', 'IKS': 'purple-500', 'STARTUP': 'red-500' };
-                const color = colorMap[res.theme.toUpperCase()] || 'indigo-500';
-                
-                list.innerHTML += `
-                    <div class="bg-white p-6 rounded-3xl border-l-8 border-${color} shadow-sm">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${res.theme} Score</span>
-                            <span class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-xs font-bold">${res.score}</span>
-                        </div>
-                        <h4 class="font-bold text-slate-900 leading-tight">${res.goal}</h4>
-                        <p class="mt-3 text-sm text-slate-500 bg-slate-50 p-3 rounded-xl italic">
-                            "${res.evidence || 'No specific quote found.'}"
-                        </p>
-                    </div>`;
-            });
-        }
-    </script>
-</body>
-</html>
+        
+        // Render Evidence List (Same as before)
+        const list = document.getElementById('evidenceList');
+        list.innerHTML = `<h3 class="text-xl font-bold text-slate-800 mb-4 px-2">Audit Evidence</h3>`;
+        data.audit.forEach(res => {
+            const colorMap = { 'SDG': 'yellow-400', 'IKS': 'purple-500', 'STARTUP': 'red-500' };
+            const borderCol = colorMap[res.theme.toUpperCase()] || 'indigo-500';
+            list.innerHTML += `
+                <div class="bg-white p-6 rounded-3xl border-l-8 border-${borderCol} shadow-sm mb-4">
+                    <h4 class="font-bold text-slate-900 leading-tight">${res.goal}</h4>
+                    <p class="mt-3 text-sm text-slate-500 bg-slate-50 p-3 rounded-xl italic">"${res.evidence}"</p>
+                </div>`;
+        });
+    }
+</script>
