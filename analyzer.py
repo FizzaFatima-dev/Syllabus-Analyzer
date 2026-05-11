@@ -12,22 +12,23 @@ def extract_text_from_pdf(pdf_path):
     return " ".join([page.get_text() for page in doc])
 
 def analyze_syllabus(syllabus_text):
-    safe_text = syllabus_text[:4000] 
+    safe_text = syllabus_text[:4500] 
     
     prompt = f"""
-    You are an expert NEP 2020 Consultant. Analyze the syllabus text provided.
-    
-    EVALUATION CRITERIA:
-    1. SDG (Sustainable Development): Look for environmental science, ethics, equality, or social health.
-    2. IKS (Indian Knowledge Systems): Look for traditional logic, ancient history, Indian contributions to science/math, or local languages.
-    3. STARTUP: Look for critical thinking, project-based learning, problem-solving, or innovation.
+    You are an Expert Academic Consultant specializing in NEP 2020. 
+    Analyze the syllabus provided to map it against SDG, IKS, and Entrepreneurship.
 
-    SCORING GUIDELINE:
-    - If a topic is mentioned but not detailed, give 30-50%.
-    - Only give 0% if the topic is completely absent.
-    - Be encouraging but honest.
+    PERSONA & TONE:
+    - Be a supportive peer to the lecturer. 
+    - Use "Semantic Mapping": If a topic implies a goal (e.g., 'Water Management' implies SDG 6), give credit.
+    - Be honest but encouraging. A score of 0% should only be used if there is absolutely no relation.
 
-    CRITICAL: For 'evidence', you MUST extract 3-5 words found EXACTLY in the text for the highlighter to work.
+    SCORING RUBRIC:
+    - 70-100%: Topic is explicitly mentioned and detailed.
+    - 40-65%: Topic is implied or related modules exist.
+    - 10-35%: Very brief mention or indirect connection.
+
+    CRITICAL: For 'evidence', you MUST extract 3-5 words EXACTLY as they appear in the text for the highlighter.
 
     Text: {safe_text}
     """
@@ -35,8 +36,8 @@ def analyze_syllabus(syllabus_text):
         completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model="llama-3.3-70b-versatile",
-            # 0.2 is the "Sweet Spot" between strict and creative
-            temperature=0.2, 
+            # 0.3 provides "Professional Intuition" while remaining reliable
+            temperature=0.3, 
             response_format={"type": "json_object"}
         )
         return json.loads(completion.choices[0].message.content)
