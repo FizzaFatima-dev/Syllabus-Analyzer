@@ -1,5 +1,5 @@
 import os
-import fitz  # PyMuPDF
+import fitz
 import json
 import re
 from groq import Groq
@@ -8,44 +8,34 @@ from dotenv import load_dotenv
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# MISSING FUNCTION FIXED BELOW
 def extract_text_from_pdf(pdf_path):
-    """Extracts all text from the uploaded PDF file."""
     doc = fitz.open(pdf_path)
-    text = ""
-    for page in doc:
-        text += page.get_text()
+    text = "".join([page.get_text() for page in doc])
     doc.close()
     return text
 
 def analyze_syllabus(syllabus_text):
-    """Performs deep semantic mapping of the syllabus text."""
     safe_text = syllabus_text[:30000] 
     
     prompt = f"""
     You are an Elite Academic Auditor specialized in NEP 2020, OBE, and Bloom's Taxonomy.
     
-    AUDIT REQUIREMENTS:
-    1. SDG: Identify which of the 17 SDGs are covered (e.g., SDG 4, SDG 9, SDG 12).
-    2. IKS: Detect Indian Knowledge Systems, history, or traditional logic.
-    3. STARTUP: Innovation and Entrepreneurship modules.
-    4. OBE & BLOOM: Identify 'Course Outcomes' and categorize by Bloom's Level (e.g., L3-Apply, L4-Analyze).
-
-    STRICT JSON OUTPUT:
+    Return ONLY a JSON object with this EXACT structure:
     {{
         "audit": [
-            {{"theme": "SDG", "goal": "SDG Name", "score": "percentage", "evidence": "exact text"}},
-            {{"theme": "IKS", "goal": "IKS Name", "score": "percentage", "evidence": "exact text"}},
-            {{"theme": "STARTUP", "goal": "Startup Name", "score": "percentage", "evidence": "exact text"}}
+            {{"theme": "SDG", "goal": "Goal Name", "score": "percentage", "evidence": "exact words"}},
+            {{"theme": "IKS", "goal": "Goal Name", "score": "percentage", "evidence": "exact words"}},
+            {{"theme": "STARTUP", "goal": "Goal Name", "score": "percentage", "evidence": "exact words"}}
         ],
         "taxonomy": {{
-            "bloom_level": "L1-L6 Level",
-            "obe_status": "Compliance Level"
+            "bloom_level": "L4 - Analyzing",
+            "obe_status": "Highly Compliant"
         }},
         "heatmap": [
-            {{"dept": "Subject Area", "sdg": "Number"}}
+            {{"dept": "Core Module", "sdg": "9"}},
+            {{"dept": "Elective", "sdg": "4"}}
         ],
-        "suggestion": "Detailed academic recommendation"
+        "suggestion": "Add a module on X to align with SDG Y."
     }}
 
     Text: {safe_text}
@@ -63,23 +53,13 @@ def analyze_syllabus(syllabus_text):
         return None
 
 def highlight_evidence(input_pdf, output_pdf, results):
-    """Highlights the evidence phrases found by the AI in the PDF."""
     doc = fitz.open(input_pdf)
-    # SDG: Green, IKS: Purple, STARTUP: Red/Coral
     colors = {"SDG": (0.1, 0.8, 0.1), "IKS": (0.6, 0.4, 0.9), "STARTUP": (1, 0.4, 0.4)}
-    
     for item in results.get('audit', []):
-        evidence_text = item.get('evidence', '')
-        if not evidence_text or evidence_text.lower() == "none":
-            continue
-            
-        color = colors.get(item.get('theme', '').upper(), (1, 1, 0))
+        text = item.get('evidence', '')
+        if not text or text.lower() == "none": continue
         for page in doc:
-            text_instances = page.search_for(evidence_text)
-            for inst in text_instances:
-                annot = page.add_highlight_annot(inst)
-                annot.set_colors(stroke=color)
-                annot.update()
-    
+            for inst in page.search_for(text):
+                page.add_highlight_annot(inst).set_colors(stroke=colors.get(item['theme'].upper(), (1,1,0))).update()
     doc.save(output_pdf)
     doc.close()
