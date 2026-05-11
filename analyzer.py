@@ -29,12 +29,8 @@ def analyze_syllabus(syllabus_text):
         ],
         "taxonomy": {{
             "bloom_level": "L4 - Analyzing",
-            "obe_status": "Highly Compliant"
+            "obe_status": "Highly Compliant (Meets NEP 2020 Standards)"
         }},
-        "heatmap": [
-            {{"dept": "Core Module", "sdg": "9"}},
-            {{"dept": "Elective", "sdg": "4"}}
-        ],
         "suggestion": "Add a module on X to align with SDG Y."
     }}
 
@@ -54,12 +50,22 @@ def analyze_syllabus(syllabus_text):
 
 def highlight_evidence(input_pdf, output_pdf, results):
     doc = fitz.open(input_pdf)
+    # Colors: SDG (Green), IKS (Purple), STARTUP (Coral)
     colors = {"SDG": (0.1, 0.8, 0.1), "IKS": (0.6, 0.4, 0.9), "STARTUP": (1, 0.4, 0.4)}
+    
     for item in results.get('audit', []):
         text = item.get('evidence', '')
-        if not text or text.lower() == "none": continue
+        if not text or text.lower() == "none" or len(text) < 3: 
+            continue
+            
+        color = colors.get(item.get('theme', '').upper(), (1, 1, 0))
         for page in doc:
-            for inst in page.search_for(text):
-                page.add_highlight_annot(inst).set_colors(stroke=colors.get(item['theme'].upper(), (1,1,0))).update()
+            # We use search_for to find the exact text in the PDF
+            text_instances = page.search_for(text)
+            for inst in text_instances:
+                annot = page.add_highlight_annot(inst)
+                annot.set_colors(stroke=color)
+                annot.update()
+    
     doc.save(output_pdf)
     doc.close()
