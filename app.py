@@ -7,13 +7,14 @@ from analyzer import extract_text_from_pdf, analyze_syllabus, highlight_evidence
 app = Flask(__name__)
 CORS(app)
 
-# Use absolute path for Render stability
+# Use absolute paths so Render doesn't get confused
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/')
 def index():
+    # Flask looks for 'templates/index.html' automatically
     return render_template('index.html')
 
 @app.route('/analyze', methods=['POST'])
@@ -26,28 +27,23 @@ def run_analysis():
 
     pdf_url = None
     if file:
-        # Secure filename with UUID
         unique_id = str(uuid.uuid4())[:8]
         filename = f"{unique_id}_{file.filename}"
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
         
         text = extract_text_from_pdf(filepath)
-        
-        # AI Analysis
         results_object = analyze_syllabus(text)
+        
         if not results_object:
             return jsonify({"error": "AI Analysis failed"}), 500
 
-        # Highlight PDF
         output_filename = "audited_" + filename
         output_pdf_path = os.path.join(UPLOAD_FOLDER, output_filename)
         highlight_evidence(filepath, output_pdf_path, results_object)
         pdf_url = f"/download/{output_filename}"
     else:
-        # Text-only path
-        text = syllabus_text
-        results_object = analyze_syllabus(text)
+        results_object = analyze_syllabus(syllabus_text)
         if not results_object:
             return jsonify({"error": "AI Analysis failed"}), 500
 
@@ -62,4 +58,6 @@ def download_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=10000)
+    # Render uses the PORT environment variable
+    port = int(os.environ.get("PORT", 10000))
+    app.run(debug=True, host='0.0.0.0', port=port)
