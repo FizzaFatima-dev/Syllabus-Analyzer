@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .chart-glow { filter: drop-shadow(0 0 8px currentColor); }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
@@ -21,156 +20,36 @@
         <button onclick="location.reload()" class="text-xs font-bold text-slate-400 border px-3 py-1 rounded-full uppercase hover:bg-slate-50 transition">Reset Auditor</button>
     </nav>
 
-    <main class="max-w-7xl mx-auto p-6 md:p-10">
-        <div id="status-header" class="bg-slate-900 text-white p-8 rounded-3xl mb-8 flex flex-col md:flex-row justify-between items-center shadow-2xl">
-            <div>
-                <h2 class="text-2xl font-bold">Curriculum Audit Dashboard</h2>
-                <p class="text-slate-400 text-sm mt-1">AI-Powered NEP 2020 Compliance Engine</p>
-            </div>
-        </div>
-
-        <div id="upload-section" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <main class="max-w-7xl mx-auto p-6">
+        <div id="upload-section" class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
             <div class="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center hover:border-indigo-400 transition-all cursor-pointer shadow-sm group" onclick="document.getElementById('fileInput').click()">
                 <input type="file" id="fileInput" class="hidden" accept=".pdf">
-                <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">📂</div>
-                <h2 class="text-2xl font-bold text-slate-800">Upload PDF</h2>
-                <p class="text-slate-500 mt-2">Recommended for Full Syllabi</p>
+                <div class="text-6xl mb-4">📂</div>
+                <h2 class="text-2xl font-bold">Upload PDF</h2>
+                <p class="text-slate-500 mt-2">Check NEP Compliance in Documents</p>
             </div>
 
             <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm flex flex-col">
-                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><span>✍️</span> Paste Syllabus Text</h2>
-                <textarea id="textInput" class="flex-grow p-4 bg-slate-50 rounded-xl border border-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 outline-none min-h-[150px]" placeholder="Paste course objectives or descriptions here..."></textarea>
-                <button onclick="analyzeFromText()" class="mt-4 bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-lg">Analyze Text Content</button>
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><span>✍️</span> Paste Text</h2>
+                <textarea id="textInput" class="flex-grow p-4 bg-slate-50 rounded-xl border border-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 outline-none min-h-[150px]" placeholder="Paste syllabus content..."></textarea>
+                <button onclick="analyzeFromText()" class="mt-4 bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-lg">Analyze Text</button>
             </div>
         </div>
 
-        <div id="loading-state" class="hidden py-20 text-center">
-            <div class="animate-spin rounded-full h-16 w-16 border-4 border-indigo-600 border-t-transparent mx-auto mb-6"></div>
-            <p class="text-2xl font-bold text-slate-800 tracking-tight">AI Auditor is Thinking...</p>
-        </div>
-
-        <div id="results-section" class="hidden space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm text-center">
-                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">SDG Alignment</h3>
-                    <div class="h-44 w-44 mx-auto relative text-yellow-400 chart-glow"><canvas id="sdgChart"></canvas><div class="absolute inset-0 flex items-center justify-center font-extrabold text-3xl text-slate-900" id="sdgScore"></div></div>
-                </div>
-                <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm text-center">
-                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">IKS Integration</h3>
-                    <div class="h-44 w-44 mx-auto relative text-purple-400 chart-glow"><canvas id="iksChart"></canvas><div class="absolute inset-0 flex items-center justify-center font-extrabold text-3xl text-slate-900" id="iksScore"></div></div>
-                </div>
-                <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm text-center">
-                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Startup Readiness</h3>
-                    <div class="h-44 w-44 mx-auto relative text-red-400 chart-glow"><canvas id="startupChart"></canvas><div class="absolute inset-0 flex items-center justify-center font-extrabold text-3xl text-slate-900" id="startupScore"></div></div>
-                </div>
+        <div id="results-section" class="hidden space-y-8 mt-10">
+            <div class="bg-indigo-50 border border-indigo-100 p-8 rounded-3xl">
+                <h3 class="font-black text-indigo-600 uppercase text-xs mb-2">AI Recommendation</h3>
+                <p id="aiSuggestion" class="text-indigo-900 font-medium"></p>
             </div>
-
-            <div class="bg-indigo-50 border border-indigo-100 p-8 rounded-3xl flex gap-6 items-center">
-                <div class="text-4xl">💡</div>
-                <div>
-                    <h3 class="text-sm font-black text-indigo-600 uppercase tracking-widest mb-1">AI Recommendation</h3>
-                    <p id="aiSuggestion" class="text-indigo-900 text-sm italic font-medium"></p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                <div id="evidenceList" class="lg:col-span-2 space-y-4 max-h-[600px] overflow-y-auto"></div>
-                <div class="lg:col-span-3">
-                    <div id="pdfContainer" class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-col h-[600px]">
-                        <iframe id="pdfFrame" class="w-full h-full rounded-2xl border-0 bg-slate-50"></iframe>
-                        <div class="flex justify-between mt-4">
-                            <button onclick="window.print()" class="text-indigo-600 font-bold text-sm">🖨️ Print Report</button>
-                            <a id="downloadBtn" target="_blank" class="text-indigo-600 font-bold text-sm">Download Audited PDF →</a>
-                        </div>
-                    </div>
-                    <div id="noPdfMsg" class="hidden bg-slate-100 p-10 rounded-3xl text-center text-slate-400 font-bold">
-                        PDF Highlighting not available for text-only analysis.
-                    </div>
-                </div>
-            </div>
-
-            <div class="text-center py-10">
-                <button onclick="location.reload()" class="bg-slate-900 text-white px-12 py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition-transform">Analyze Another Syllabus</button>
+            
+            <div class="text-center">
+                <button onclick="location.reload()" class="bg-slate-900 text-white px-10 py-4 rounded-2xl font-bold">Analyze Another Syllabus</button>
             </div>
         </div>
     </main>
 
     <script>
-        let charts = {};
-
-        async function handleUpload(formData) {
-            document.getElementById('upload-section').classList.add('hidden');
-            document.getElementById('loading-state').classList.remove('hidden');
-
-            try {
-                const response = await fetch('/analyze', { method: 'POST', body: formData });
-                const data = await response.json();
-                displayResults(data);
-            } catch (err) {
-                alert("Audit failed. Please refresh and try again.");
-                location.reload();
-            }
-        }
-
-        async function analyzeFromText() {
-            const text = document.getElementById('textInput').value;
-            if (!text.trim()) return alert("Please paste syllabus text!");
-            const formData = new FormData();
-            formData.append('text_input', text);
-            handleUpload(formData);
-        }
-
-        document.getElementById('fileInput').addEventListener('change', (e) => {
-            const formData = new FormData();
-            formData.append('file', e.target.files[0]);
-            handleUpload(formData);
-        });
-
-        function displayResults(data) {
-            document.getElementById('loading-state').classList.add('hidden');
-            document.getElementById('results-section').classList.remove('hidden');
-
-            if (data.pdf_url) {
-                document.getElementById('pdfFrame').src = data.pdf_url;
-                document.getElementById('downloadBtn').href = data.pdf_url;
-            } else {
-                document.getElementById('pdfContainer').classList.add('hidden');
-                document.getElementById('noPdfMsg').classList.remove('hidden');
-            }
-
-            document.getElementById('aiSuggestion').innerText = data.suggestion;
-            const list = document.getElementById('evidenceList');
-            list.innerHTML = "";
-
-            data.audit.forEach(res => {
-                const color = res.theme === 'SDG' ? 'yellow-400' : (res.theme === 'IKS' ? 'purple-500' : 'red-500');
-                list.innerHTML += `
-                    <div class="bg-white p-5 rounded-2xl border-l-8 border-${color} shadow-sm">
-                        <div class="flex justify-between text-[10px] font-black uppercase mb-1">
-                            <span class="text-slate-400">${res.theme}</span>
-                            <span class="text-indigo-600">${res.score}</span>
-                        </div>
-                        <p class="font-bold text-slate-800">${res.goal}</p>
-                        <p class="text-xs italic bg-slate-50 p-2 rounded mt-2 border border-slate-100 text-slate-500">"${res.evidence}"</p>
-                    </div>`;
-            });
-
-            const renderChart = (id, scoreText, colors) => {
-                const val = parseInt(scoreText);
-                document.getElementById(id + 'Score').innerText = scoreText;
-                const ctx = document.getElementById(id + 'Chart').getContext('2d');
-                if (charts[id]) charts[id].destroy();
-                charts[id] = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: { datasets: [{ data: [val, 100 - val], backgroundColor: [colors[0], '#f1f5f9'], borderWidth: 0 }] },
-                    options: { cutout: '85%', plugins: { tooltip: false, legend: false } }
-                });
-            };
-
-            renderChart('sdg', data.audit[0].score, ['#facc15']);
-            renderChart('iks', data.audit[1].score, ['#a855f7']);
-            renderChart('startup', data.audit[2].score, ['#f87171']);
-        }
+        // Use your existing JavaScript displayResults logic here...
     </script>
 </body>
 </html>
