@@ -1,11 +1,25 @@
-import os, fitz, json, re
+import os
+import fitz  # PyMuPDF
+import json
+import re
 from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
+# MISSING FUNCTION FIXED BELOW
+def extract_text_from_pdf(pdf_path):
+    """Extracts all text from the uploaded PDF file."""
+    doc = fitz.open(pdf_path)
+    text = ""
+    for page in doc:
+        text += page.get_text()
+    doc.close()
+    return text
+
 def analyze_syllabus(syllabus_text):
+    """Performs deep semantic mapping of the syllabus text."""
     safe_text = syllabus_text[:30000] 
     
     prompt = f"""
@@ -20,19 +34,18 @@ def analyze_syllabus(syllabus_text):
     STRICT JSON OUTPUT:
     {{
         "audit": [
-            {{"theme": "SDG", "goal": "SDG 12: Sustainable Consumption", "score": "85%", "evidence": "exact text"}},
-            {{"theme": "IKS", "goal": "Indian Mathematics", "score": "0%", "evidence": "None"}},
-            {{"theme": "STARTUP", "goal": "Venture Development", "score": "90%", "evidence": "exact text"}}
+            {{"theme": "SDG", "goal": "SDG Name", "score": "percentage", "evidence": "exact text"}},
+            {{"theme": "IKS", "goal": "IKS Name", "score": "percentage", "evidence": "exact text"}},
+            {{"theme": "STARTUP", "goal": "Startup Name", "score": "percentage", "evidence": "exact text"}}
         ],
         "taxonomy": {{
-            "bloom_level": "L4 - Analyzing",
-            "obe_status": "Highly Compliant"
+            "bloom_level": "L1-L6 Level",
+            "obe_status": "Compliance Level"
         }},
         "heatmap": [
-            {{"dept": "Computer Science", "sdg": "9"}},
-            {{"dept": "General Science", "sdg": "4"}}
+            {{"dept": "Subject Area", "sdg": "Number"}}
         ],
-        "suggestion": "Add a module on X to align with SDG Y."
+        "suggestion": "Detailed academic recommendation"
     }}
 
     Text: {safe_text}
@@ -45,15 +58,28 @@ def analyze_syllabus(syllabus_text):
             response_format={"type": "json_object"}
         )
         return json.loads(completion.choices[0].message.content)
-    except: return None
+    except Exception as e:
+        print(f"AI Error: {e}")
+        return None
 
 def highlight_evidence(input_pdf, output_pdf, results):
+    """Highlights the evidence phrases found by the AI in the PDF."""
     doc = fitz.open(input_pdf)
-    colors = {"SDG": (0.1, 0.8, 0.1), "IKS": (0.6, 0.4, 0.9), "STARTUP": (1, 0.4, 0)}
+    # SDG: Green, IKS: Purple, STARTUP: Red/Coral
+    colors = {"SDG": (0.1, 0.8, 0.1), "IKS": (0.6, 0.4, 0.9), "STARTUP": (1, 0.4, 0.4)}
+    
     for item in results.get('audit', []):
-        text = item.get('evidence', '')
-        if not text or text.lower() == "none": continue
+        evidence_text = item.get('evidence', '')
+        if not evidence_text or evidence_text.lower() == "none":
+            continue
+            
+        color = colors.get(item.get('theme', '').upper(), (1, 1, 0))
         for page in doc:
-            for inst in page.search_for(text):
-                page.add_highlight_annot(inst).set_colors(stroke=colors.get(item['theme'], (1,1,0))).update()
-    doc.save(output_pdf); doc.close()
+            text_instances = page.search_for(evidence_text)
+            for inst in text_instances:
+                annot = page.add_highlight_annot(inst)
+                annot.set_colors(stroke=color)
+                annot.update()
+    
+    doc.save(output_pdf)
+    doc.close()
