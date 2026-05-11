@@ -13,33 +13,35 @@ def extract_text_from_pdf(pdf_path):
     return " ".join([page.get_text() for page in doc])
 
 def analyze_syllabus(syllabus_text):
-    safe_text = syllabus_text[:4000] 
+    # INCREASED VISION: 30,000 characters covers about 15-20 pages
+    # Llama-3-70b can handle this easily
+    safe_text = syllabus_text[:30000] 
     
-    # We add a strict instruction to the system to avoid chatter
     prompt = f"""
-    You are an Expert Academic Consultant. Map this syllabus to NEP 2020 goals.
+    You are an Expert Academic Consultant. Audit this syllabus for NEP 2020.
     
-    RULES:
-    1. SDG: Map to environmental/social goals.
-    2. IKS: Map to Indian history, science, or local context.
-    3. STARTUP: Map to innovation, logic, or project skills.
-    
-    SCORING: Be a supportive consultant. Give credit for implied themes.
-    EVIDENCE: Extract 3-5 words EXACTLY as they appear in the text.
+    STRICT RULES FOR EVIDENCE:
+    1. DO NOT use the University name, Author names, or Dates as evidence.
+    2. 'evidence' MUST be a 3-5 word phrase representing ACTUAL COURSE TOPICS or MODULES.
+    3. If you find a topic like 'Yoga', 'Ancient Indian Science', or 'Local Ethics', give high IKS scores.
+    4. If you find 'Project', 'Case Study', or 'Java/Python', give high Startup scores.
 
-    Return ONLY a JSON object with this exact structure:
+    SCORING: 
+    - Be a supportive consultant. 
+    - Map themes to goals even if keywords are slightly different.
+
+    Return ONLY a JSON object:
     {{
         "audit": [
-            {{"theme": "SDG", "goal": "Goal Name", "score": "75%", "evidence": "exact words"}},
-            {{"theme": "IKS", "goal": "Goal Name", "score": "50%", "evidence": "exact words"}},
-            {{"theme": "STARTUP", "goal": "Goal Name", "score": "85%", "evidence": "exact words"}}
+            {{"theme": "SDG", "goal": "Goal Name", "score": "75%", "evidence": "exact course topic"}},
+            {{"theme": "IKS", "goal": "Goal Name", "score": "50%", "evidence": "exact course topic"}},
+            {{"theme": "STARTUP", "goal": "Goal Name", "score": "85%", "evidence": "exact course topic"}}
         ],
-        "suggestion": "Your helpful recommendation here"
+        "suggestion": "Helpful advice for the lecturer"
     }}
 
     Text: {safe_text}
     """
-    
     try:
         completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
@@ -47,18 +49,12 @@ def analyze_syllabus(syllabus_text):
             temperature=0.3,
             response_format={"type": "json_object"}
         )
-        
-        raw_content = completion.choices[0].message.content
-        
-        # CLEANING LOGIC: In case the AI adds extra text
-        json_match = re.search(r'\{.*\}', raw_content, re.DOTALL)
-        if json_match:
-            return json.loads(json_match.group(0))
-        
-        return json.loads(raw_content)
-
+        # (Keep the same JSON cleaning logic from the previous reply)
+        import re
+        json_match = re.search(r'\{.*\}', completion.choices[0].message.content, re.DOTALL)
+        return json.loads(json_match.group(0)) if json_match else None
     except Exception as e:
-        print(f"Detailed Error: {e}")
+        print(f"Error: {e}")
         return None
 
 def highlight_evidence(input_pdf, output_pdf, results):
