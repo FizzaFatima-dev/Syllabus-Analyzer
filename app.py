@@ -7,14 +7,13 @@ from analyzer import extract_text_from_pdf, analyze_syllabus, highlight_evidence
 app = Flask(__name__)
 CORS(app)
 
-# Use absolute paths so Render doesn't get confused
+# Absolute paths for Render
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/')
 def index():
-    # Flask looks for 'templates/index.html' automatically
     return render_template('index.html')
 
 @app.route('/analyze', methods=['POST'])
@@ -58,6 +57,6 @@ def download_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
 if __name__ == '__main__':
-    # Render uses the PORT environment variable
+    # CRITICAL: This allows Render to set the port
     port = int(os.environ.get("PORT", 10000))
     app.run(debug=True, host='0.0.0.0', port=port)
