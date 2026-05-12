@@ -115,6 +115,7 @@
         const colors = { 'SDG': '#10b981', 'IKS': '#a855f7', 'STARTUP': '#f43f5e' };
 
         async function startAnalysis(formData) {
+            // UI Transition
             document.getElementById('upload-section').classList.add('hidden');
             document.getElementById('welcome-text').classList.add('hidden');
             document.getElementById('loading-state').classList.remove('hidden');
@@ -122,17 +123,24 @@
 
             try {
                 const response = await fetch('/analyze', { method: 'POST', body: formData });
-                const data = await response.json();
-                if (data.error) throw new Error(data.error);
+                
+                // Error handling to prevent "Unexpected token <" alert
+                if (!response.ok) {
+                    const errorMsg = await response.json().catch(() => ({ error: "Server crashed" }));
+                    throw new Error(errorMsg.error || `HTTP error! status: ${response.status}`);
+                }
 
+                const data = await response.json();
                 document.getElementById('loading-state').classList.add('hidden');
                 displayResults(data);
 
+                // Success Feedback
                 const toast = document.getElementById('toast');
                 toast.classList.add('opacity-100', 'translate-y-0');
                 setTimeout(() => toast.classList.remove('opacity-100'), 3500);
 
             } catch (err) { 
+                console.error("Audit Failed:", err);
                 alert("Audit Error: " + err.message); 
                 location.reload(); 
             }
@@ -140,10 +148,13 @@
 
         function displayResults(data) {
             document.getElementById('results-section').classList.remove('hidden');
-            document.getElementById('aiSuggestion').innerText = data.suggestion ?? "No recommendation available.";
-            document.getElementById('bloomLevel').innerText = data.taxonomy?.bloom_level ?? "L4 - Analyze";
+            
+            // Textual Content
+            document.getElementById('aiSuggestion').innerText = data.suggestion ?? "No specific improvements found.";
+            document.getElementById('bloomLevel').innerText = data.taxonomy?.bloom_level ?? "L4 - Analyzing";
             document.getElementById('obeStatus').innerText = data.taxonomy?.obe_status ?? "Highly Compliant";
 
+            // Charts Rendering
             const statsGrid = document.getElementById('stats-grid');
             statsGrid.innerHTML = '';
             (data.audit || []).forEach((res, i) => {
@@ -156,6 +167,7 @@
                         <div class="w-32 h-32 mb-6"><canvas id="${canvasId}"></canvas></div>
                         <span class="text-4xl font-black">${res.score ?? '0%'}</span>
                     </div>`;
+                
                 setTimeout(() => {
                     const ctx = document.getElementById(canvasId).getContext('2d');
                     new Chart(ctx, {
@@ -172,24 +184,29 @@
                 }, 100);
             });
 
+            // Evidence Cards
             const list = document.getElementById('evidenceList');
             list.innerHTML = `<h3 class="text-xl font-black mb-6 uppercase tracking-tighter italic">Audit Evidence</h3>`;
             (data.audit || []).forEach(res => {
-                list.innerHTML += `<div class="bg-white p-8 rounded-[2.5rem] border-l-[10px] shadow-sm mb-4 card-hover" style="border-color: ${colors[res.theme.toUpperCase()]}">
-                    <h4 class="font-extrabold text-slate-900 text-lg mb-4">${res.goal}</h4>
-                    <p class="text-sm text-slate-500 bg-slate-50 p-5 rounded-2xl italic border border-slate-100">"${res.evidence}"</p>
-                </div>`;
+                list.innerHTML += `
+                    <div class="bg-white p-8 rounded-[2.5rem] border-l-[10px] shadow-sm mb-4 card-hover" style="border-color: ${colors[res.theme.toUpperCase()]}">
+                        <span class="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2 block">${res.theme} Match</span>
+                        <h4 class="font-extrabold text-slate-900 text-lg mb-4">${res.goal}</h4>
+                        <p class="text-sm text-slate-500 bg-slate-50 p-5 rounded-2xl italic border border-slate-100">"${res.evidence}"</p>
+                    </div>`;
             });
 
+            // PDF Loading with Cache Buster
             if (data.pdf_url) {
-                // FORCE BROWSER TO RELOAD PDF (Removes old cache)
                 const freshUrl = data.pdf_url + "?t=" + new Date().getTime();
                 document.getElementById('pdfFrame').src = freshUrl;
                 document.getElementById('downloadBtn').href = data.pdf_url;
             }
+            
             lucide.createIcons();
         }
 
+        // Event Listeners
         document.getElementById('fileInput').addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 const formData = new FormData();
@@ -199,8 +216,10 @@
         });
 
         function analyzeFromText() {
+            const text = document.getElementById('textInput').value.trim();
+            if (!text) return alert("Please enter syllabus text first.");
             const formData = new FormData();
-            formData.append('text_input', document.getElementById('textInput').value);
+            formData.append('text_input', text);
             startAnalysis(formData);
         }
     </script>
