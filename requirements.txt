@@ -4,3 +4,4 @@ pymupdf
 groq
 python-dotenv
 gunicorn
+docx2txt
