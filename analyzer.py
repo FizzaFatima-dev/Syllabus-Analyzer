@@ -1,40 +1,81 @@
 import os
-import fitz
 import json
+import re
+import fitz  # PyMuPDF for handling PDFs
+import docx2txt  # For Word documents (.docx)
 from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-def extract_text_from_pdf(pdf_path):
-    doc = fitz.open(pdf_path)
+def extract_text_from_file(file_path):
+    ext = os.path.splitext(file_path)[1].lower()
     text = ""
-    for page in doc:
-        text += page.get_text("text")
-    doc.close()
+    if ext == ".pdf":
+        doc = fitz.open(file_path)
+        for page in doc:
+            text += page.get_text("text") + "\n"
+        doc.close()
+    elif ext in [".docx", ".doc"]:
+        text = docx2txt.process(file_path)
+    else:
+        raise ValueError("Unsupported file format!")
     return text
 
 def analyze_syllabus(syllabus_text):
     prompt = f"""
-    You are an Elite NEP 2020 Auditor. 
-    Find specific technical modules for SDG, IKS, and Startup.
-    
-    STRICT RULES:
-    1. PICK EXACT phrases (5-8 words) from the Unit content.
-    2. IGNORE the university name or degree headers.
-    
-    Return ONLY JSON:
+    You are an Expert Curriculum Architect specializing in the Indian National Education Policy (NEP) framework.
+    Your task is to take the raw syllabus text provided and restructure it entirely into a standardized, tabular university curriculum matrix.
+
+    =========================================
+    CRITICAL CLASSIFICATION MANDATE (STRICT):
+    =========================================
+    You must look at the topics with an implicit regional/national lens. 
+    - ANY mention of data visualization, socio-economic analysis, public healthcare metrics, regional governance, or national development datasets MUST be treated as implicitly relevant to the Indian development context.
+    - You MUST wrap these phrases inside the IKS badge: <span class="badge-iks">...</span>
+    - Consequently, ensure the global "IKS" percentage score heavily reflects this coverage (do not leave it low if these data/governance topics are present).
+
+    Organize the syllabus content into clear Units. For each structural row, determine:
+    1. unit: Unit Number
+    2. contents: Detailed Breakdown of topics. 
+       Wrap nearly ALL applicable key items inside granular HTML span tags corresponding to the matching pillar badges phrase-by-phrase:
+       - Wrap AI, Machine Learning, Data Analytics, Python, tools, or algorithms inside: <span class="badge-ai">...</span>
+       - Wrap fundamental practical skills, general definitions, architecture, or standard procedures inside: <span class="badge-skill">...</span>
+       - Wrap socio-economic data, public healthcare, governance, or development datasets/visualization inside: <span class="badge-iks">...</span>
+       - Wrap business framework, tradeoffs, industry metrics, management, or strategy context inside: <span class="badge-startup">...</span>
+
+    3. co: Course Outcomes Mapped (e.g., CO1, CO2)
+    4. cognitive_level: Cognitive Levels (e.g., Acquire, Analyze, Implement, Understand, Apply)
+    5. relevance: Relevance (L/R/N/G - Local, Regional, National, Global)
+    6. pillars: High-level primary pillar classification list (Make sure to include "IKS" if governance/data visualization is present).
+    7. sdg_mapped: Provide specific SDG mappings based on topics (e.g., "SDG 3, SDG 4, SDG 9").
+
+    Return ONLY a JSON object structured exactly like this:
     {{
-        "audit": [
-            {{"theme": "SDG", "goal": "Environment", "score": "85%", "evidence": "exact phrase from text"}},
-            {{"theme": "IKS", "goal": "Indigenous Knowledge", "score": "75%", "evidence": "exact phrase from text"}},
-            {{"theme": "STARTUP", "goal": "Entrepreneurship", "score": "95%", "evidence": "exact phrase from text"}}
-        ],
+        "scores": {{
+            "SDG": "percentage",
+            "IKS": "percentage",
+            "STARTUP": "percentage",
+            "AI": "percentage"
+        }},
+        "course_outcomes_summary": "High-level compliance summary.",
         "taxonomy": {{ "bloom_level": "L4 - Analyzing", "obe_status": "Highly Compliant" }},
-        "suggestion": "Recommendation here."
+        "suggestion": "Recommendations for enhancement.",
+        "table_rows": [
+            {{
+                "unit": "I",
+                "contents": "Example formatted text using the requested span tags.",
+                "co": "CO1",
+                "cognitive_level": "Apply",
+                "relevance": "N",
+                "pillars": "IKS, AI / Tech Integration",
+                "sdg_mapped": "SDG 8"
+            }}
+        ]
     }}
-    Text: {syllabus_text[:15000]}
+
+    Syllabus Text: {syllabus_text[:20000]}
     """
     try:
         completion = client.chat.completions.create(
@@ -44,39 +85,6 @@ def analyze_syllabus(syllabus_text):
             response_format={"type": "json_object"}
         )
         return json.loads(completion.choices[0].message.content)
-    except: return None
-
-def highlight_evidence(input_pdf, output_pdf, results):
-    doc = fitz.open(input_pdf)
-    # Emerald, Purple, Rose
-    colors = {
-        "SDG": (0.06, 0.72, 0.51),
-        "IKS": (0.66, 0.33, 0.97),
-        "STARTUP": (0.96, 0.25, 0.25)
-    }
-    
-    for item in results.get('audit', []):
-        phrase = item.get('evidence', '').strip().replace('"', '').replace("'", "")
-        if len(phrase) < 5: continue
-            
-        color = colors.get(item.get('theme', '').upper(), (1, 1, 0))
-        
-        for page in doc:
-            # Multi-Pass Search
-            search_results = page.search_for(phrase)
-            
-            # If full phrase fails, search first 4 words (Handles line breaks)
-            if not search_results and len(phrase.split()) > 4:
-                search_results = page.search_for(" ".join(phrase.split()[:4]))
-
-            for rect in search_results:
-                # Add highlight
-                annot = page.add_highlight_annot(rect)
-                annot.set_colors(stroke=color)
-                # Ensure the highlight is "Multiplied" (shows up better on some PDF readers)
-                annot.set_opacity(0.5) 
-                annot.update()
-    
-    # Save with garbage collection to ensure the highlights are "baked in"
-    doc.save(output_pdf, garbage=4, deflate=True, clean=True)
-    doc.close()
+    except Exception as e: 
+        print(f"Error calling LLM: {e}")
+        return None
